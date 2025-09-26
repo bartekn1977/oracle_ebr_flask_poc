@@ -116,3 +116,11 @@ CONN app_service_user[app_schema]/<password>@//localhost:1521/testpdb_service
 CONN app_service_user[app_schema]/<password>@//localhost:1521/testpdb_service_v1
 CONN app_service_user[app_schema]/<password>@//localhost:1521/testpdb_service_v2
 ```
+
+## Python virtual env
+```
+py -3 -m venv .venv
+
+pip install Flask
+
+```
