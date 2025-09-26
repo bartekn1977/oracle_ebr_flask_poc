@@ -32,21 +32,11 @@ class Pet(Base):
         }
 
 
-# pet_table = Table(
-#     "PET",
-#     metadata_obj,
-#     Column("ID", Integer, Sequence("PET_SEQ", start=1), primary_key=True),
-#     Column("CATEGORY", String(20)),
-#     Column("NAME", String(30)),
-#     Column("PHOTO", String(255), nullable=True),
-#     Column("TAGS", String(255)),
-#     Column("STATUS", String(30)),
-# )
-
 # initialize the app with the extension
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "oracle+oracledb://app_service[app_schema]:SomePass4321@localhost:5521/?service_name=testpdb_service_v1"
+app.config["SQLALCHEMY_DATABASE_URI"] = "oracle+oracledb://app_service_user[app_schema]:SomePass4321@localhost:5521/?service_name=testpdb_service"
 db.init_app(app)
+
 
 @app.route('/pets', methods=["GET"])
 def all_pets():
