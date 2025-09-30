@@ -1,15 +1,12 @@
 from flask import Flask, abort, jsonify, redirect, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Column, Integer, MetaData, Sequence, String, Table, select, event
+from sqlalchemy import Column, Integer, MetaData, Sequence, String, Table, select, event, text
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import Mapped
 
 class Base(DeclarativeBase):
   pass
-
-metadata_obj = MetaData()
-
 
 class Pet(Base):
     __tablename__ = "PET"
@@ -32,22 +29,32 @@ class Pet(Base):
 
 
 # initialize the app with the extension
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = "oracle+oracledb://app_service_user[app_schema]:SomePass4321@localhost:5521/?service_name=testpdb_service"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+
+db = SQLAlchemy()
+
+def create_app():
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = "oracle+oracledb://app_service_user[app_schema]:SomePass4321@localhost:5521/?service_name=testpdb_service"
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    db.init_app(app)
+
+    # Ensure the app context is active so db.engine is available
+    with app.app_context():
+        @event.listens_for(db.engine, "connect")
+        def alter_session_on_connect(dbapi_connection, connection_record):
+            cursor = dbapi_connection.cursor()
+            cursor.execute("ALTER SESSION SET EDITION = V1")
+            cursor.close()
+
+    return app
 
 
-
-# @event.listens_for(db.engine, "connect")
-# def alter_session_on_connect(dbapi_connection, connection_record):
-#     cursor = dbapi_connection.cursor()
-#     cursor.execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD'")
-#     cursor.close()
-
+app = create_app()
 
 @app.route('/pets', methods=["GET"])
 def all_pets():
+    #   update_session_version()
     pets = db.session.execute(db.select(Pet).order_by(Pet.id)).scalars().all()
     if pets is None:
        return jsonify({"error": "No Pets found"}), 404
@@ -73,3 +80,12 @@ def add_pet():
     db.session.add(new_pet)
     db.session.commit()
     return "added"
+
+@app.teardown_appcontext
+def teardown_db(exception):
+    if db is not None:
+        db.session.close_all()
+        db.engine.pool.dispose()
+
+if __name__ == "__main__":
+    app.run(debug=True)
