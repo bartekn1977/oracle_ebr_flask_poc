@@ -109,6 +109,10 @@ exec DBMS_SERVICE.STOP_SERVICE('testpdb_service_v2');
 exec DBMS_SERVICE.DELETE_SERVICE('testpdb_service_v2');
 
 ```
+### Checking objesct and editions
+```
+SELECT object_name, object_type, status, edition_name FROM user_objects_ae WHERE edition_name is not null order by 4, 2;
+```
 
 ### test connections
 ```
