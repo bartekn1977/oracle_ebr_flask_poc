@@ -1,14 +1,13 @@
 from flask import Flask, abort, jsonify, redirect, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Column, Integer, MetaData, Sequence, String, Table, select
+from sqlalchemy import Column, Integer, MetaData, Sequence, String, Table, select, event
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import Mapped
 
 class Base(DeclarativeBase):
   pass
 
-db = SQLAlchemy(model_class=Base)
 metadata_obj = MetaData()
 
 
@@ -34,8 +33,17 @@ class Pet(Base):
 
 # initialize the app with the extension
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "oracle+oracledb://app_service_user[app_schema]:SomePass4321@localhost:5521/?service_name=testpdb_service"
-db.init_app(app)
+app.config['SQLALCHEMY_DATABASE_URI'] = "oracle+oracledb://app_service_user[app_schema]:SomePass4321@localhost:5521/?service_name=testpdb_service"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+
+
+# @event.listens_for(db.engine, "connect")
+# def alter_session_on_connect(dbapi_connection, connection_record):
+#     cursor = dbapi_connection.cursor()
+#     cursor.execute("ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD'")
+#     cursor.close()
 
 
 @app.route('/pets', methods=["GET"])
